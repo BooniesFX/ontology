@@ -129,6 +129,7 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.NodePortFlag,
 			utils.DualPortSupportFlag,
 			utils.ConsensusPortFlag,
+			utils.MaxPoolSizeFlag,
 		},
 	},
 	{

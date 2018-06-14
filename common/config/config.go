@@ -54,7 +54,7 @@ const (
 	DEFAULT_WS_PORT          = uint(20335)
 	DEFAULT_HTTP_INFO_PORT   = uint(0)
 	DEFAULT_MAX_TX_IN_BLOCK  = 60000
-	DEFAULT_MAX_SYNC_HEADER  = 500
+	DEFAULT_MAX_ROUTINR_POOL = 500
 	DEFAULT_ENABLE_CONSENSUS = true
 	DEFAULT_ENABLE_EVENT_LOG = true
 	DEFAULT_CLI_RPC_PORT     = uint(20000)
@@ -414,20 +414,20 @@ type ConsensusConfig struct {
 }
 
 type P2PNodeConfig struct {
-	ReservedPeers     []string
-	ReservedPeersOnly bool
-	NetworkMaigc      uint32
-	NetworkId         uint32
-	NetworkName       string
-	NodePort          uint
-	NodeConsensusPort uint
-	DualPortSupport   bool
-	IsTLS             bool
-	CertPath          string
-	KeyPath           string
-	CAPath            string
-	HttpInfoPort      uint
-	MaxHdrSyncReqs    uint
+	ReservedPeers      []string
+	ReservedPeersOnly  bool
+	NetworkMaigc       uint32
+	NetworkId          uint32
+	NetworkName        string
+	NodePort           uint
+	NodeConsensusPort  uint
+	DualPortSupport    bool
+	IsTLS              bool
+	CertPath           string
+	KeyPath            string
+	CAPath             string
+	HttpInfoPort       uint
+	MaxRoutinePoolSize uint
 }
 
 type RpcConfig struct {
@@ -481,20 +481,20 @@ func NewOntologyConfig() *OntologyConfig {
 			MaxTxInBlock:    DEFAULT_MAX_TX_IN_BLOCK,
 		},
 		P2PNode: &P2PNodeConfig{
-			ReservedPeers:     make([]string, 0),
-			ReservedPeersOnly: false,
-			NetworkId:         NETWORK_ID_MAIN_NET,
-			NetworkName:       GetNetworkName(NETWORK_ID_POLARIS_NET),
-			NetworkMaigc:      GetNetworkMagic(NETWORK_ID_POLARIS_NET),
-			NodePort:          DEFAULT_NODE_PORT,
-			NodeConsensusPort: DEFAULT_CONSENSUS_PORT,
-			DualPortSupport:   true,
-			IsTLS:             false,
-			CertPath:          "",
-			KeyPath:           "",
-			CAPath:            "",
-			HttpInfoPort:      DEFAULT_HTTP_INFO_PORT,
-			MaxHdrSyncReqs:    DEFAULT_MAX_SYNC_HEADER,
+			ReservedPeers:      make([]string, 0),
+			ReservedPeersOnly:  false,
+			NetworkId:          NETWORK_ID_MAIN_NET,
+			NetworkName:        GetNetworkName(NETWORK_ID_POLARIS_NET),
+			NetworkMaigc:       GetNetworkMagic(NETWORK_ID_POLARIS_NET),
+			NodePort:           DEFAULT_NODE_PORT,
+			NodeConsensusPort:  DEFAULT_CONSENSUS_PORT,
+			DualPortSupport:    true,
+			IsTLS:              false,
+			CertPath:           "",
+			KeyPath:            "",
+			CAPath:             "",
+			HttpInfoPort:       DEFAULT_HTTP_INFO_PORT,
+			MaxRoutinePoolSize: DEFAULT_MAX_ROUTINR_POOL,
 		},
 		Rpc: &RpcConfig{
 			EnableHttpJsonRpc: true,

@@ -135,7 +135,11 @@ var (
 		Usage: "Consensus listening port",
 		Value: config.DEFAULT_CONSENSUS_PORT,
 	}
-
+	MaxPoolSizeFlag = cli.UintFlag{
+		Name:  "netpoolsize",
+		Usage: "concurrent goroutine pool size in p2p (range 1~5120, default 512)",
+		Value: config.DEFAULT_MAX_ROUTINR_POOL,
+	}
 	// RPC settings
 	RPCDisabledFlag = cli.BoolFlag{
 		Name:  "disablerpc",

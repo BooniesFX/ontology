@@ -99,6 +99,7 @@ func setupAPP() *cli.App {
 		utils.NodePortFlag,
 		utils.ConsensusPortFlag,
 		utils.DualPortSupportFlag,
+		utils.MaxPoolSizeFlag,
 		//test mode setting
 		utils.EnableTestModeFlag,
 		utils.TestModeGenBlockTimeFlag,
