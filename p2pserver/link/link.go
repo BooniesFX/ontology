@@ -160,9 +160,23 @@ func (this *Link) Tx(msg types.Message) error {
 	if err != nil {
 		log.Error("error serialize messge ", err.Error())
 	}
-	log.Debugf("TX buf length: %d\n", len(buf.Bytes()))
+	payload := buf.Bytes()
+	nByteCnt := len(payload)
+	log.Debugf("TX buf length: %d\n", nByteCnt)
 
-	_, err = conn.Write(buf.Bytes())
+	nCount := nByteCnt / common.PER_SEND_LEN
+	for i := 0; i < nCount; i++ {
+		conn.SetWriteDeadline(time.Now().Add(common.WRITE_DEADLINE * time.Second))
+		_, err = conn.Write(payload[i*common.PER_SEND_LEN : (i+1)*common.PER_SEND_LEN])
+		if err != nil {
+			log.Error("error sending messge to peer node ", err.Error())
+			this.disconnectNotify()
+			return err
+		}
+	}
+	//last package
+	conn.SetWriteDeadline(time.Now().Add(common.WRITE_DEADLINE * time.Second))
+	_, err = conn.Write(payload[nCount*common.PER_SEND_LEN:])
 	if err != nil {
 		log.Error("error sending messge to peer node ", err.Error())
 		this.disconnectNotify()

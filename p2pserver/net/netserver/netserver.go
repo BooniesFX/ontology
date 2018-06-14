@@ -326,7 +326,7 @@ func (this *NetServer) Connect(addr string, isConsensus bool) error {
 		go remotePeer.SyncLink.Rx()
 		remotePeer.SetSyncState(common.HAND)
 		version := msgpack.NewVersion(this, false, ledger.DefLedger.GetCurrentBlockHeight())
-		err := remotePeer.SyncLink.Tx(version)
+		err := remotePeer.Send(version, false)
 		if err != nil {
 			this.RemoveFromOutConnRecord(addr)
 			log.Error(err)
@@ -341,7 +341,7 @@ func (this *NetServer) Connect(addr string, isConsensus bool) error {
 		go remotePeer.ConsLink.Rx()
 		remotePeer.SetConsState(common.HAND)
 		version := msgpack.NewVersion(this, true, ledger.DefLedger.GetCurrentBlockHeight())
-		err := remotePeer.ConsLink.Tx(version)
+		err := remotePeer.Send(version, true)
 		if err != nil {
 			log.Error(err)
 			return err
