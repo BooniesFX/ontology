@@ -137,6 +137,17 @@ func startOntology(ctx *cli.Context) {
 		log.Errorf("initConfig error:%s", err)
 		return
 	}
+	ldg, err := initLedger(ctx)
+	if err != nil {
+		log.Errorf("%s", err)
+		return
+	}
+	defer ldg.Close()
+	err = importBlocks(ctx)
+	if err != nil {
+		log.Errorf("importBlocks error:%s", err)
+		return
+	}
 
 	txpool, err := initTxPool(ctx)
 	if err != nil {

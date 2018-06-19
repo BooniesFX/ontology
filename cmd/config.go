@@ -136,11 +136,6 @@ func setP2PNodeConfig(ctx *cli.Context, cfg *config.P2PNodeConfig) {
 	cfg.MaxConnInBoundForSingleIP = ctx.GlobalUint(utils.GetFlagName(utils.MaxConnInBoundForSingleIPFlag))
 
 	rsvfile := ctx.GlobalString(utils.GetFlagName(utils.ReservedPeersFileFlag))
-	cfg.MaxRoutinePoolSize = ctx.GlobalUint(utils.GetFlagName(utils.MaxPoolSizeFlag))
-	if cfg.MaxRoutinePoolSize == 0 || cfg.MaxRoutinePoolSize > config.DEFAULT_MAX_ROUTINR_POOL*10 {
-		log.Warnf("poolsize invalid: %d, replace with default: %d \n", cfg.MaxRoutinePoolSize, config.DEFAULT_MAX_ROUTINR_POOL)
-		cfg.MaxRoutinePoolSize = config.DEFAULT_MAX_ROUTINR_POOL
-	}
 	if cfg.ReservedPeersOnly {
 		if !common.FileExisted(rsvfile) {
 			log.Infof("file %s not exist\n", rsvfile)
