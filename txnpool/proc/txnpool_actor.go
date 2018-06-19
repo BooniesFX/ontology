@@ -63,6 +63,7 @@ type TxActor struct {
 // handleTransaction handles a transaction from network and http
 func (ta *TxActor) handleTransaction(sender tc.SenderType, self *actor.PID,
 	txn *tx.Transaction) {
+
 	ta.server.increaseStats(tc.RcvStats)
 
 	if ta.server.getTransaction(txn.Hash()) != nil {

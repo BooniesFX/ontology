@@ -19,16 +19,17 @@
 package req
 
 import (
+	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/ontio/ontology-eventbus/actor"
-	"github.com/ontio/ontology/common"
-	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/core/types"
-	"github.com/ontio/ontology/errors"
 	p2pcommon "github.com/ontio/ontology/p2pserver/common"
-	tc "github.com/ontio/ontology/txnpool/common"
 )
+
+var TxCnt uint64
+var TxCntLatest uint64
 
 const txnPoolReqTimeout = p2pcommon.ACTOR_TIMEOUT * time.Second
 
@@ -38,30 +39,60 @@ func SetTxnPoolPid(txnPid *actor.PID) {
 	txnPoolPid = txnPid
 }
 
-//add txn to txnpool
-func AddTransaction(transaction *types.Transaction) {
-	if txnPoolPid == nil {
-		log.Error("net_server AddTransaction(): txnpool pid is nil")
-		return
-	}
-	txReq := &tc.TxReq{
-		Tx:     transaction,
-		Sender: tc.NetSender,
-	}
-	txnPoolPid.Tell(txReq)
+var DefTxnPid *actor.PID
+
+type TxnPoolActor struct {
+	props *actor.Props
 }
 
-//get txn according to hash
-func GetTransaction(hash common.Uint256) (*types.Transaction, error) {
-	if txnPoolPid == nil {
-		log.Error("net_server tx pool pid is nil")
-		return nil, errors.NewErr("net_server tx pool pid is nil")
-	}
-	future := txnPoolPid.RequestFuture(&tc.GetTxnReq{Hash: hash}, txnPoolReqTimeout)
-	result, err := future.Result()
+func NewTxnPoolActor() *TxnPoolActor {
+	return &TxnPoolActor{}
+}
+
+func (self *TxnPoolActor) Start() *actor.PID {
+	self.props = actor.FromProducer(func() actor.Actor { return self })
+	var err error
+	DefTxnPid, err = actor.SpawnNamed(self.props, "TxnPoolActor")
 	if err != nil {
-		log.Errorf("net_server GetTransaction error: %v\n", err)
-		return nil, err
+		panic(fmt.Errorf("TxnPoolActor SpawnNamed error:%s", err))
 	}
-	return result.(tc.GetTxnRsp).Txn, nil
+	return DefTxnPid
+}
+
+func (self *TxnPoolActor) Receive(ctx actor.Context) {
+	switch msg := ctx.Message().(type) {
+	case *actor.Started:
+	case *actor.Stop:
+	case *tc.TxReq:
+		AddTransaction(msg.Tx)
+	case *tc.GetTxnReq:
+		sender := ctx.Sender()
+		if sender != nil {
+			sender.Request(&tc.GetTxnRsp{Txn: nil},
+				ctx.Self())
+		}
+	default:
+		log.Warnf("TxnPoolActor cannot deal with type: %v %v", msg, reflect.TypeOf(msg))
+	}
+}
+
+//add txn to txnpool
+func AddTransaction(transaction *types.Transaction) {
+	atomic.AddUint64(&(TxCnt), 1)
+}
+
+func PrintTxnInfo() {
+	txnPerSnd := TxCnt - TxCntLatest
+	TxCntLatest = TxCnt
+	fmt.Printf("total txn count %d,TPS = %d/s\n", TxCnt, txnPerSnd)
+}
+
+func LoopPrintActorInfo() {
+	ticker := time.NewTicker(time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			PrintTxnInfo()
+		}
+	}
 }

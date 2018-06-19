@@ -34,6 +34,10 @@ func SetNetServerPID(actr *actor.PID) {
 	netServerPid = actr
 }
 
+func GetNetServerPID() *actor.PID {
+	return netServerPid
+}
+
 func Xmit(msg interface{}) error {
 	if netServerPid == nil {
 		return nil

@@ -137,35 +137,15 @@ func startOntology(ctx *cli.Context) {
 		log.Errorf("initConfig error:%s", err)
 		return
 	}
-	acc, err := initAccount(ctx)
-	if err != nil {
-		log.Errorf("initWallet error:%s", err)
-		return
-	}
-	ldg, err := initLedger(ctx)
-	if err != nil {
-		log.Errorf("%s", err)
-		return
-	}
-	defer ldg.Close()
-	err = importBlocks(ctx)
-	if err != nil {
-		log.Errorf("importBlocks error:%s", err)
-		return
-	}
+
 	txpool, err := initTxPool(ctx)
 	if err != nil {
 		log.Errorf("initTxPool error:%s", err)
 		return
 	}
-	p2pSvr, p2pPid, err := initP2PNode(ctx, txpool)
+	_, _, err = initP2PNode(ctx, txpool)
 	if err != nil {
 		log.Errorf("initP2PNode error:%s", err)
-		return
-	}
-	_, err = initConsensus(ctx, p2pPid, txpool, acc)
-	if err != nil {
-		log.Errorf("initConsensus error:%s", err)
 		return
 	}
 	err = initRpc(ctx)
@@ -178,12 +158,8 @@ func startOntology(ctx *cli.Context) {
 		log.Errorf("initLocalRpc error:%s", err)
 		return
 	}
-	initRestful(ctx)
-	initWs(ctx)
-	initNodeInfo(ctx, p2pSvr)
-	//initCliSvr(ctx, acc)
 
-	go logCurrBlockHeight()
+	go netreqactor.LoopPrintActorInfo()
 	waitToExit()
 }
 
@@ -298,7 +274,6 @@ func initP2PNode(ctx *cli.Context, txpoolSvr *proc.TXPoolServer) (*p2pserver.P2P
 	netreqactor.SetTxnPoolPid(txpoolSvr.GetPID(tc.TxActor))
 	txpoolSvr.RegisterActor(tc.NetActor, p2pPID)
 	hserver.SetNetServerPID(p2pPID)
-	p2p.WaitForPeersStart()
 	log.Infof("P2P node init success")
 	return p2p, p2pPID, nil
 }

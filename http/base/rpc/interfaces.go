@@ -27,7 +27,7 @@ import (
 	"github.com/ontio/ontology/core/payload"
 	scom "github.com/ontio/ontology/core/store/common"
 	"github.com/ontio/ontology/core/types"
-	ontErrors "github.com/ontio/ontology/errors"
+	//	ontErrors "github.com/ontio/ontology/errors"
 	bactor "github.com/ontio/ontology/http/base/actor"
 	bcomn "github.com/ontio/ontology/http/base/common"
 	berr "github.com/ontio/ontology/http/base/error"
@@ -285,9 +285,10 @@ func SendRawTransaction(params []interface{}) map[string]interface{} {
 			}
 		}
 		hash = txn.Hash()
-		if errCode := bcomn.VerifyAndSendTx(&txn); errCode != ontErrors.ErrNoError {
-			return responseSuccess(errCode.Error())
+		for i := 0; i < 10; i++ {
+			bactor.Xmit(&txn)
 		}
+		return responseSuccess(hash.ToHexString())
 	default:
 		return responsePack(berr.INVALID_PARAMS, "")
 	}
