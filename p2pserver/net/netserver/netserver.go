@@ -656,39 +656,8 @@ func (this *NetServer) GetPeerSyncAddressCount() (count uint) {
 
 //CleanNoHandShakeConn close connection connected over DEFAULT_NO_HANDSHAKE_TIMEOUT but not handshake
 func (this *NetServer) CleanNoHandShakeConn() {
-	this.InConnRecord.RLock()
-	for addr, connTime := range this.InConnRecord.InConnectingAddrs {
-		if !this.IsNbrPeerAddr(addr, false) && time.Now().Unix()-connTime > config.DEFAULT_NO_HANDSHAKE_TIMEOUT {
-			peer := this.GetPeerFromAddr(addr)
-			if peer != nil {
-				peer.CloseSync()
-				peer.CloseCons()
-			}
-			this.RemoveFromInConnRecord(addr)
-			this.RemoveFromConnectingList(addr)
-			this.RemovePeerSyncAddress(addr)
-			this.RemovePeerConsAddress(addr)
-			log.Warnf("Connection with (%s) no handshake over (%d)s, disconnect")
-		}
-	}
-	this.InConnRecord.RUnlock()
-
-	this.OutConnRecord.RLock()
-	for addr, connTime := range this.OutConnRecord.OutConnectingAddrs {
-		if !this.IsNbrPeerAddr(addr, false) && time.Now().Unix()-connTime > config.DEFAULT_NO_HANDSHAKE_TIMEOUT {
-			peer := this.GetPeerFromAddr(addr)
-			if peer != nil {
-				peer.CloseSync()
-				peer.CloseCons()
-			}
-			this.RemoveFromOutConnRecord(addr)
-			this.RemoveFromConnectingList(addr)
-			this.RemovePeerSyncAddress(addr)
-			this.RemovePeerConsAddress(addr)
-			log.Warnf("Connection with (%s) no handshake over (%d)s, disconnect")
-		}
-	}
-	this.OutConnRecord.RUnlock()
+	this.CleanNoHandShakeInConn()
+	this.CleanNoHandShakeOutConn()
 }
 
 //AddInConnRecord add in connection to InConnRecord
@@ -730,6 +699,28 @@ func (this *NetServer) RemoveFromInConnRecord(addr string) {
 	defer this.InConnRecord.Unlock()
 	if _, ok := this.InConnRecord.InConnectingAddrs[addr]; ok {
 		delete(this.InConnRecord.InConnectingAddrs, addr)
+	}
+}
+
+//CleanNoHandShakeInConn remove no handshake connection from inConnRecordList
+func (this *NetServer) CleanNoHandShakeInConn() {
+	this.InConnRecord.Lock()
+	defer this.InConnRecord.Unlock()
+
+	for addr, connTime := range this.InConnRecord.InConnectingAddrs {
+		if !this.IsNbrPeerAddr(addr, false) && time.Now().Unix()-connTime > config.DEFAULT_NO_HANDSHAKE_TIMEOUT {
+			log.Debugf("[p2p]CleanNoHandShakeConnFromInConnRecord %s", addr)
+			peer := this.GetPeerFromAddr(addr)
+			if peer != nil {
+				peer.CloseSync()
+				peer.CloseCons()
+			}
+			delete(this.InConnRecord.InConnectingAddrs, addr)
+			this.RemoveFromConnectingList(addr)
+			this.RemovePeerSyncAddress(addr)
+			this.RemovePeerConsAddress(addr)
+			log.Debugf("[p2p]Connection with (%s) no handshake over (%d)s, disconnect")
+		}
 	}
 }
 
@@ -782,6 +773,27 @@ func (this *NetServer) RemoveFromOutConnRecord(addr string) {
 		delete(this.OutConnRecord.OutConnectingAddrs, addr)
 	}
 
+}
+
+//CleanNoHandShakeOutConn remove no handshake connection from outConnRecordList
+func (this *NetServer) CleanNoHandShakeOutConn() {
+	this.OutConnRecord.Lock()
+	defer this.OutConnRecord.Unlock()
+	for addr, connTime := range this.OutConnRecord.OutConnectingAddrs {
+		if !this.IsNbrPeerAddr(addr, false) && time.Now().Unix()-connTime > config.DEFAULT_NO_HANDSHAKE_TIMEOUT {
+			log.Debugf("[p2p]CleanNoHandShakeConnFromOutConnRecord %s", addr)
+			peer := this.GetPeerFromAddr(addr)
+			if peer != nil {
+				peer.CloseSync()
+				peer.CloseCons()
+			}
+			delete(this.OutConnRecord.OutConnectingAddrs, addr)
+			this.RemoveFromConnectingList(addr)
+			this.RemovePeerSyncAddress(addr)
+			this.RemovePeerConsAddress(addr)
+			log.Debugf("[p2p]Connection with (%s) no handshake over (%d)s, disconnect", addr, config.DEFAULT_NO_HANDSHAKE_TIMEOUT)
+		}
+	}
 }
 
 //GetOutConnRecordLen return length of OutConnRecord
